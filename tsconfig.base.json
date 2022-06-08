@@ -14,7 +14,11 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@anatine/ionic-react-router": [
+        "packages/ionic-react-router/src/index.ts"
+      ]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

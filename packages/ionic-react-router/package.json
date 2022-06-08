@@ -1,0 +1,28 @@
+{
+  "name": "@anatine/ionic-react-router",
+  "version": "0.0.1",
+  "description": "React Router v6 wrapper for @ionic/react",
+  "keywords": [
+    "ionic",
+    "framework",
+    "react",
+    "mobile",
+    "app",
+    "hybrid",
+    "webapp",
+    "cordova",
+    "progressive web app",
+    "pwa"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anatine/ionic-modules.git"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.6",
+    "react-dom": ">=16.8.6",
+    "react-router": "^6.3.0",
+    "react-router-dom": "^6.3.0"
+  }
+}
