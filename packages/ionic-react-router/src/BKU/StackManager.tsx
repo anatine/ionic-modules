@@ -1,28 +1,34 @@
 import {
+  generateId,
+  getConfig,
   RouteInfo,
   RouteManagerContext,
   StackContext,
   StackContextState,
   ViewItem,
-  generateId,
-  getConfig,
 } from '@ionic/react';
-import React from 'react';
+import React, { PropsWithChildren } from 'react';
 import { matchPath } from 'react-router-dom';
-
 import { clonePageElement } from './clonePageElement';
 
-interface StackManagerProps {
+interface StackManagerProps extends PropsWithChildren {
   routeInfo: RouteInfo;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface StackManagerState {}
 
-const isViewVisible = (el: HTMLElement) => !el.classList.contains('ion-page-invisible') && !el.classList.contains('ion-page-hidden');
+// Helper function to find if an element has a class indicating it is not visible
+const isViewVisible = (el: HTMLElement) =>
+  !el.classList.contains('ion-page-invisible') &&
+  !el.classList.contains('ion-page-hidden');
 
-export class StackManager extends React.PureComponent<StackManagerProps, StackManagerState> {
+export class StackManager extends React.PureComponent<
+  StackManagerProps,
+  StackManagerState
+> {
   id: string;
-  context!: React.ContextType<typeof RouteManagerContext>;
+  override context!: React.ContextType<typeof RouteManagerContext>;
   ionRouterOutlet?: React.ReactElement;
   routerOutletElement: HTMLIonRouterOutletElement | undefined;
 
@@ -41,7 +47,7 @@ export class StackManager extends React.PureComponent<StackManagerProps, StackMa
     this.id = generateId('routerOutlet');
   }
 
-  componentDidMount() {
+  override componentDidMount() {
     if (this.routerOutletElement) {
       this.setupRouterOutlet(this.routerOutletElement);
       // console.log(`SM Mount - ${this.routerOutletElement.id} (${this.id})`);
@@ -49,14 +55,17 @@ export class StackManager extends React.PureComponent<StackManagerProps, StackMa
     }
   }
 
-  componentDidUpdate(prevProps: StackManagerProps) {
-    if (this.props.routeInfo.pathname !== prevProps.routeInfo.pathname || this.pendingPageTransition) {
+  override componentDidUpdate(prevProps: StackManagerProps) {
+    if (
+      this.props.routeInfo.pathname !== prevProps.routeInfo.pathname ||
+      this.pendingPageTransition
+    ) {
       this.handlePageTransition(this.props.routeInfo);
       this.pendingPageTransition = false;
     }
   }
 
-  componentWillUnmount() {
+  override componentWillUnmount() {
     // console.log(`SM UNMount - ${(this.routerOutletElement?.id as any).id} (${this.id})`);
     this.context.clearOutlet(this.id);
   }
@@ -72,8 +81,14 @@ export class StackManager extends React.PureComponent<StackManagerProps, StackMa
        */
       this.pendingPageTransition = true;
     } else {
-      let enteringViewItem = this.context.findViewItemByRouteInfo(routeInfo, this.id);
-      let leavingViewItem = this.context.findLeavingViewItemByRouteInfo(routeInfo, this.id);
+      let enteringViewItem = this.context.findViewItemByRouteInfo(
+        routeInfo,
+        this.id
+      );
+      let leavingViewItem = this.context.findLeavingViewItemByRouteInfo(
+        routeInfo,
+        this.id
+      );
 
       if (!leavingViewItem && routeInfo.prevRouteLastPathname) {
         leavingViewItem = this.context.findViewItemByPathname(
@@ -86,8 +101,16 @@ export class StackManager extends React.PureComponent<StackManagerProps, StackMa
       if (leavingViewItem) {
         if (routeInfo.routeAction === 'replace') {
           leavingViewItem.mount = false;
-        } else if (!(routeInfo.routeAction === 'push' && routeInfo.routeDirection === 'forward')) {
-          if (routeInfo.routeDirection !== 'none' && enteringViewItem !== leavingViewItem) {
+        } else if (
+          !(
+            routeInfo.routeAction === 'push' &&
+            routeInfo.routeDirection === 'forward'
+          )
+        ) {
+          if (
+            routeInfo.routeDirection !== 'none' &&
+            enteringViewItem !== leavingViewItem
+          ) {
             leavingViewItem.mount = false;
           }
         } else if (routeInfo.routeOptions?.unmount) {
@@ -103,7 +126,11 @@ export class StackManager extends React.PureComponent<StackManagerProps, StackMa
       if (enteringViewItem) {
         enteringViewItem.reactElement = enteringRoute;
       } else if (enteringRoute) {
-        enteringViewItem = this.context.createViewItem(this.id, enteringRoute, routeInfo);
+        enteringViewItem = this.context.createViewItem(
+          this.id,
+          enteringRoute,
+          routeInfo
+        );
         this.context.addViewItem(enteringViewItem);
       }
 
@@ -132,13 +159,20 @@ export class StackManager extends React.PureComponent<StackManagerProps, StackMa
          * to find the leaving view item to transition between.
          */
         if (!leavingViewItem && this.props.routeInfo.prevRouteLastPathname) {
-          leavingViewItem = this.context.findViewItemByPathname(this.props.routeInfo.prevRouteLastPathname, this.id);
+          leavingViewItem = this.context.findViewItemByPathname(
+            this.props.routeInfo.prevRouteLastPathname,
+            this.id
+          );
         }
 
         /**
          * If the entering view is already visible and the leaving view is not, the transition does not need to occur.
          */
-        if (isViewVisible(enteringViewItem.ionPageElement) && leavingViewItem !== undefined && !isViewVisible(leavingViewItem.ionPageElement!)) {
+        if (
+          isViewVisible(enteringViewItem.ionPageElement) &&
+          leavingViewItem !== undefined &&
+          !isViewVisible(leavingViewItem.ionPageElement!)
+        ) {
           return;
         }
 
@@ -186,7 +220,8 @@ export class StackManager extends React.PureComponent<StackManagerProps, StackMa
   async setupRouterOutlet(routerOutlet: HTMLIonRouterOutletElement) {
     const canStart = () => {
       const config = getConfig();
-      const swipeEnabled = config && config.get('swipeBackEnabled', routerOutlet.mode === 'ios');
+      const swipeEnabled =
+        config && config.get('swipeBackEnabled', routerOutlet.mode === 'ios');
       if (swipeEnabled) {
         return this.context.canGoBack();
       } else {
@@ -216,7 +251,11 @@ export class StackManager extends React.PureComponent<StackManagerProps, StackMa
         ? undefined
         : routeInfo.routeDirection;
 
-    if (enteringViewItem && enteringViewItem.ionPageElement && this.routerOutletElement) {
+    if (
+      enteringViewItem &&
+      enteringViewItem.ionPageElement &&
+      this.routerOutletElement
+    ) {
       if (
         leavingViewItem &&
         leavingViewItem.ionPageElement &&
@@ -225,9 +264,15 @@ export class StackManager extends React.PureComponent<StackManagerProps, StackMa
         // If a page is transitioning to another version of itself
         // we clone it so we can have an animation to show
 
-        const match = matchComponent(leavingViewItem.reactElement, routeInfo.pathname, true);
+        const match = matchComponent(
+          leavingViewItem.reactElement,
+          routeInfo.pathname,
+          true
+        );
         if (match) {
-          const newLeavingElement = clonePageElement(leavingViewItem.ionPageElement.outerHTML);
+          const newLeavingElement = clonePageElement(
+            leavingViewItem.ionPageElement.outerHTML
+          );
           if (newLeavingElement) {
             this.routerOutletElement.appendChild(newLeavingElement);
             await runCommit(enteringViewItem.ionPageElement, newLeavingElement);
@@ -237,7 +282,10 @@ export class StackManager extends React.PureComponent<StackManagerProps, StackMa
           await runCommit(enteringViewItem.ionPageElement, undefined);
         }
       } else {
-        await runCommit(enteringViewItem.ionPageElement, leavingViewItem?.ionPageElement);
+        await runCommit(
+          enteringViewItem.ionPageElement,
+          leavingViewItem?.ionPageElement
+        );
         if (leavingViewItem && leavingViewItem.ionPageElement) {
           leavingViewItem.ionPageElement.classList.add('ion-page-hidden');
           leavingViewItem.ionPageElement.setAttribute('aria-hidden', 'true');
@@ -260,7 +308,7 @@ export class StackManager extends React.PureComponent<StackManagerProps, StackMa
     }
   }
 
-  render() {
+  override render() {
     const { children } = this.props;
     const ionRouterOutlet = React.Children.only(children) as React.ReactElement;
     this.ionRouterOutlet = ionRouterOutlet;
@@ -299,7 +347,7 @@ export class StackManager extends React.PureComponent<StackManagerProps, StackMa
     );
   }
 
-  static get contextType() {
+  static override get contextType() {
     return RouteManagerContext;
   }
 }
@@ -308,39 +356,49 @@ export default StackManager;
 
 function matchRoute(node: React.ReactNode, routeInfo: RouteInfo) {
   let matchedNode: React.ReactNode;
-  React.Children.forEach(node as React.ReactElement, (child: React.ReactElement) => {
-    const matchProps = {
-      exact: child.props.exact,
-      path: child.props.path || child.props.from,
-      component: child.props.component,
-    };
-    const match = matchPath(routeInfo.pathname, matchProps);
-    if (match) {
-      matchedNode = child;
+  React.Children.forEach(
+    node as React.ReactElement,
+    (child: React.ReactElement) => {
+      const matchProps = {
+        exact: child.props.exact,
+        path: child.props.path || child.props.from,
+        component: child.props.component,
+      };
+      const match = matchPath(routeInfo.pathname, matchProps.path);
+      if (match) {
+        matchedNode = child;
+      }
     }
-  });
+  );
 
   if (matchedNode) {
     return matchedNode;
   }
   // If we haven't found a node
   // try to find one that doesn't have a path or from prop, that will be our not found route
-  React.Children.forEach(node as React.ReactElement, (child: React.ReactElement) => {
-    if (!(child.props.path || child.props.from)) {
-      matchedNode = child;
+  React.Children.forEach(
+    node as React.ReactElement,
+    (child: React.ReactElement) => {
+      if (!(child.props.path || child.props.from)) {
+        matchedNode = child;
+      }
     }
-  });
+  );
 
   return matchedNode;
 }
 
-function matchComponent(node: React.ReactElement, pathname: string, forceExact?: boolean) {
+function matchComponent(
+  node: React.ReactElement,
+  pathname: string,
+  forceExact?: boolean
+) {
   const matchProps = {
     exact: forceExact ? true : node.props.exact,
     path: node.props.path || node.props.from,
     component: node.props.component,
   };
-  const match = matchPath(pathname, matchProps);
+  const match = matchPath(pathname, matchProps.path);
 
   return match;
 }

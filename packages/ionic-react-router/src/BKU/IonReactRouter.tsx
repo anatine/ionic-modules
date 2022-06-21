@@ -3,10 +3,11 @@ import {
   History,
   Location as HistoryLocation,
   createBrowserHistory as createHistory,
+  Listener,
   Update,
 } from 'history';
 import React from 'react';
-import { Router, RouterProps } from 'react-router-dom-v5-compat';
+import { RouterProps, Router } from 'react-router-dom-v5-compat';
 
 import { IonRouter } from './IonRouter';
 
@@ -38,6 +39,7 @@ export class IonReactRouter extends React.Component<IonReactRouterProps> {
    * a single object with both location and action.
    */
   handleHistoryChange({ location, action }: Update) {
+    // TODO: why cast location as "any"?
     const locationValue = (location as any).location || location;
     const actionValue = (location as any).action || action;
     if (this.historyListenHandler) {

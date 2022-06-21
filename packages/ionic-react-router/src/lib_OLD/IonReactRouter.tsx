@@ -2,22 +2,22 @@ import {
   Action as HistoryAction,
   History,
   Location as HistoryLocation,
-  createHashHistory as createHistory,
+  createBrowserHistory as createHistory,
 } from 'history';
 import React from 'react';
 import { BrowserRouterProps, Router } from 'react-router-dom';
 
 import { IonRouter } from './IonRouter';
 
-interface IonReactHashRouterProps extends BrowserRouterProps {
+interface IonReactRouterProps extends BrowserRouterProps {
   history?: History;
 }
 
-export class IonReactHashRouter extends React.Component<IonReactHashRouterProps> {
-  history: History;
+export class IonReactRouter extends React.Component<IonReactRouterProps> {
   historyListenHandler?: (location: HistoryLocation, action: HistoryAction) => void;
+  history: History;
 
-  constructor(props: IonReactHashRouterProps) {
+  constructor(props: IonReactRouterProps) {
     super(props);
     const { history, ...rest } = props;
     this.history = history || createHistory(rest);
@@ -25,21 +25,21 @@ export class IonReactHashRouter extends React.Component<IonReactHashRouterProps>
     this.registerHistoryListener = this.registerHistoryListener.bind(this);
   }
 
-  /**
-   * history@4.x passes separate location and action
-   * params. history@5.x passes location and action
-   * together as a single object.
-   * TODO: If support for React Router <=5 is dropped
-   * this logic is no longer needed. We can just assume
-   * a single object with both location and action.
-   */
+ /**
+  * history@4.x passes separate location and action
+  * params. history@5.x passes location and action
+  * together as a single object.
+  * TODO: If support for React Router <=5 is dropped
+  * this logic is no longer needed. We can just assume
+  * a single object with both location and action.
+  */
   handleHistoryChange(location: HistoryLocation, action: HistoryAction) {
-    const locationValue = (location as any).location || location;
-    const actionValue = (location as any).action || action;
-    if (this.historyListenHandler) {
-      this.historyListenHandler(locationValue, actionValue);
-    }
-  }
+   const locationValue = (location as any).location || location;
+   const actionValue = (location as any).action || action;
+   if (this.historyListenHandler) {
+     this.historyListenHandler(locationValue, actionValue);
+   }
+ }
 
   registerHistoryListener(cb: (location: HistoryLocation, action: HistoryAction) => void) {
     this.historyListenHandler = cb;

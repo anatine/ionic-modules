@@ -1,30 +1,27 @@
 import {
   Action as HistoryAction,
-  History,
   Location as HistoryLocation,
-  createBrowserHistory as createHistory,
-  Update,
+  MemoryHistory,
 } from 'history';
 import React from 'react';
-import { Router, RouterProps } from 'react-router-dom-v5-compat';
+import { MemoryRouterProps, Router } from 'react-router';
 
 import { IonRouter } from './IonRouter';
 
-interface IonReactRouterProps extends RouterProps {
-  history?: History;
+interface IonReactMemoryRouterProps extends MemoryRouterProps {
+  history: MemoryHistory;
 }
 
-export class IonReactRouter extends React.Component<IonReactRouterProps> {
+export class IonReactMemoryRouter extends React.Component<IonReactMemoryRouterProps> {
+  history: MemoryHistory;
   historyListenHandler?: (
     location: HistoryLocation,
     action: HistoryAction
   ) => void;
-  history: History;
 
-  constructor(props: IonReactRouterProps) {
+  constructor(props: IonReactMemoryRouterProps) {
     super(props);
-    const { history, ...rest } = props;
-    this.history = history || createHistory();
+    this.history = props.history;
     this.history.listen(this.handleHistoryChange.bind(this));
     this.registerHistoryListener = this.registerHistoryListener.bind(this);
   }
@@ -37,7 +34,7 @@ export class IonReactRouter extends React.Component<IonReactRouterProps> {
    * this logic is no longer needed. We can just assume
    * a single object with both location and action.
    */
-  handleHistoryChange({ location, action }: Update) {
+  handleHistoryChange(location: HistoryLocation, action: HistoryAction) {
     const locationValue = (location as any).location || location;
     const actionValue = (location as any).action || action;
     if (this.historyListenHandler) {
@@ -54,7 +51,7 @@ export class IonReactRouter extends React.Component<IonReactRouterProps> {
   override render() {
     const { children, ...props } = this.props;
     return (
-      <Router history={this.history} {...props}>
+      <Router {...props}>
         <IonRouter registerHistoryListener={this.registerHistoryListener}>
           {children}
         </IonRouter>

@@ -1,3 +1,4 @@
+// LEARN: NavManager is the @ionic/react context entry point.
 import {
   AnimationBuilder,
   LocationHistory,
@@ -13,7 +14,7 @@ import {
 } from '@ionic/react';
 import { Action as HistoryAction, Location as HistoryLocation } from 'history';
 import React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { RouteProps } from 'react-router-dom';
 
 import { IonRouteInner } from './IonRouteInner';
 import { ReactRouterViewStack } from './ReactRouterViewStack';
@@ -24,9 +25,9 @@ export interface LocationState {
   routerOptions?: { as?: string; unmount?: boolean };
 }
 
-interface IonRouteProps extends RouteComponentProps<{}, {}, LocationState> {
+interface IonRouteProps extends RouteProps {
   registerHistoryListener: (
-    cb: (location: HistoryLocation<any>, action: HistoryAction) => void
+    cb: (location: HistoryLocation, action: HistoryAction) => void
   ) => void;
 }
 
@@ -36,7 +37,9 @@ interface IonRouteState {
 
 class IonRouterInner extends React.PureComponent<IonRouteProps, IonRouteState> {
   currentTab?: string;
-  exitViewFromOtherOutletHandlers: ((pathname: string) => ViewItem | undefined)[] = [];
+  exitViewFromOtherOutletHandlers: ((
+    pathname: string
+  ) => ViewItem | undefined)[] = [];
   incomingRouteParams?: Partial<RouteInfo>;
   locationHistory = new LocationHistory();
   viewStack = new ReactRouterViewStack();
@@ -48,7 +51,8 @@ class IonRouterInner extends React.PureComponent<IonRouteProps, IonRouteState> {
     goBack: () => this.handleNavigateBack(),
     createViewItem: this.viewStack.createViewItem,
     findViewItemByRouteInfo: this.viewStack.findViewItemByRouteInfo,
-    findLeavingViewItemByRouteInfo: this.viewStack.findLeavingViewItemByRouteInfo,
+    findLeavingViewItemByRouteInfo:
+      this.viewStack.findLeavingViewItemByRouteInfo,
     addViewItem: this.viewStack.add,
     unMountViewItem: this.viewStack.remove,
   };
@@ -77,12 +81,18 @@ class IonRouterInner extends React.PureComponent<IonRouteProps, IonRouteState> {
   }
 
   handleChangeTab(tab: string, path?: string, routeOptions?: any) {
-    if (!path) { return; }
+    if (!path) {
+      return;
+    }
 
     const routeInfo = this.locationHistory.getCurrentRouteInfoForTab(tab);
     const [pathname, search] = path.split('?');
     if (routeInfo) {
-      this.incomingRouteParams = { ...routeInfo, routeAction: 'push', routeDirection: 'none' };
+      this.incomingRouteParams = {
+        ...routeInfo,
+        routeAction: 'push',
+        routeDirection: 'none',
+      };
       if (routeInfo.pathname === pathname) {
         this.incomingRouteParams.routeOptions = routeOptions;
         this.props.history.push(routeInfo.pathname + (routeInfo.search || ''));
@@ -93,11 +103,18 @@ class IonRouterInner extends React.PureComponent<IonRouteProps, IonRouteState> {
         this.props.history.push(pathname + (search ? '?' + search : ''));
       }
     } else {
-      this.handleNavigate(pathname, 'push', 'none', undefined, routeOptions, tab);
+      this.handleNavigate(
+        pathname,
+        'push',
+        'none',
+        undefined,
+        routeOptions,
+        tab
+      );
     }
   }
 
-  handleHistoryChange(location: HistoryLocation<LocationState>, action: HistoryAction) {
+  handleHistoryChange(location: HistoryLocation, action: HistoryAction) {
     let leavingLocationInfo: RouteInfo;
     if (this.incomingRouteParams) {
       if (this.incomingRouteParams.routeAction === 'replace') {
@@ -109,7 +126,8 @@ class IonRouterInner extends React.PureComponent<IonRouteProps, IonRouteState> {
       leavingLocationInfo = this.locationHistory.current();
     }
 
-    const leavingUrl = leavingLocationInfo.pathname + leavingLocationInfo.search;
+    const leavingUrl =
+      leavingLocationInfo.pathname + leavingLocationInfo.search;
     if (leavingUrl !== location.pathname) {
       if (!this.incomingRouteParams) {
         if (action === 'REPLACE') {
@@ -122,8 +140,13 @@ class IonRouterInner extends React.PureComponent<IonRouteProps, IonRouteState> {
         if (action === 'POP') {
           const currentRoute = this.locationHistory.current();
           if (currentRoute && currentRoute.pushedByRoute) {
-            const prevInfo = this.locationHistory.findLastLocation(currentRoute);
-            this.incomingRouteParams = { ...prevInfo, routeAction: 'pop', routeDirection: 'back' };
+            const prevInfo =
+              this.locationHistory.findLastLocation(currentRoute);
+            this.incomingRouteParams = {
+              ...prevInfo,
+              routeAction: 'pop',
+              routeDirection: 'back',
+            };
           } else {
             this.incomingRouteParams = {
               routeAction: 'pop',
@@ -169,9 +192,14 @@ class IonRouterInner extends React.PureComponent<IonRouteProps, IonRouteState> {
         } else if (routeInfo.routeAction === 'pop') {
           const r = this.locationHistory.findLastLocation(routeInfo);
           routeInfo.pushedByRoute = r?.pushedByRoute;
-        } else if (routeInfo.routeAction === 'push' && routeInfo.tab !== leavingLocationInfo.tab) {
+        } else if (
+          routeInfo.routeAction === 'push' &&
+          routeInfo.tab !== leavingLocationInfo.tab
+        ) {
           // If we are switching tabs grab the last route info for the tab and use its pushedByRoute
-          const lastRoute = this.locationHistory.getCurrentRouteInfoForTab(routeInfo.tab);
+          const lastRoute = this.locationHistory.getCurrentRouteInfoForTab(
+            routeInfo.tab
+          );
           routeInfo.pushedByRoute = lastRoute?.pushedByRoute;
         } else if (routeInfo.routeAction === 'replace') {
           // Make sure to set the lastPathname, etc.. to the current route so the page transitions out
@@ -183,13 +211,20 @@ class IonRouterInner extends React.PureComponent<IonRouteProps, IonRouteState> {
            * say that /home was pushed by /home which is not correct.
            */
           const currentPushedBy = currentRouteInfo?.pushedByRoute;
-          const pushedByRoute = (currentPushedBy !== undefined && currentPushedBy !== routeInfo.pathname) ? currentPushedBy : routeInfo.pushedByRoute;
+          const pushedByRoute =
+            currentPushedBy !== undefined &&
+            currentPushedBy !== routeInfo.pathname
+              ? currentPushedBy
+              : routeInfo.pushedByRoute;
 
-          routeInfo.lastPathname = currentRouteInfo?.pathname || routeInfo.lastPathname;
+          routeInfo.lastPathname =
+            currentRouteInfo?.pathname || routeInfo.lastPathname;
           routeInfo.prevRouteLastPathname = currentRouteInfo?.lastPathname;
           routeInfo.pushedByRoute = pushedByRoute;
-          routeInfo.routeDirection = currentRouteInfo?.routeDirection || routeInfo.routeDirection;
-          routeInfo.routeAnimation = currentRouteInfo?.routeAnimation || routeInfo.routeAnimation;
+          routeInfo.routeDirection =
+            currentRouteInfo?.routeDirection || routeInfo.routeDirection;
+          routeInfo.routeAnimation =
+            currentRouteInfo?.routeAnimation || routeInfo.routeAnimation;
         }
 
         this.locationHistory.add(routeInfo);
@@ -238,9 +273,14 @@ class IonRouterInner extends React.PureComponent<IonRouteProps, IonRouteState> {
     }
   }
 
-  handleNavigateBack(defaultHref: string | RouteInfo = '/', routeAnimation?: AnimationBuilder) {
+  handleNavigateBack(
+    defaultHref: string | RouteInfo = '/',
+    routeAnimation?: AnimationBuilder
+  ) {
     const config = getConfig();
-    defaultHref = defaultHref ? defaultHref : config && config.get('backButtonDefaultHref' as any);
+    defaultHref = defaultHref
+      ? defaultHref
+      : config && config.get('backButtonDefaultHref' as any);
     const routeInfo = this.locationHistory.current();
     if (routeInfo && routeInfo.pushedByRoute) {
       const prevInfo = this.locationHistory.findLastLocation(routeInfo);
@@ -253,16 +293,15 @@ class IonRouterInner extends React.PureComponent<IonRouteProps, IonRouteState> {
         };
         if (
           routeInfo.lastPathname === routeInfo.pushedByRoute ||
-          (
-            /**
-             * We need to exclude tab switches/tab
-             * context changes here because tabbed
-             * navigation is not linear, but router.back()
-             * will go back in a linear fashion.
-             */
-            prevInfo.pathname === routeInfo.pushedByRoute &&
-            routeInfo.tab === '' && prevInfo.tab === ''
-          )
+          /**
+           * We need to exclude tab switches/tab
+           * context changes here because tabbed
+           * navigation is not linear, but router.back()
+           * will go back in a linear fashion.
+           */
+          (prevInfo.pathname === routeInfo.pushedByRoute &&
+            routeInfo.tab === '' &&
+            prevInfo.tab === '')
         ) {
           /**
            * history@4.x uses goBack(), history@5.x uses back()
@@ -274,7 +313,11 @@ class IonRouterInner extends React.PureComponent<IonRouteProps, IonRouteState> {
           const goBack = history.goBack || history.back;
           goBack();
         } else {
-          this.handleNavigate(prevInfo.pathname + (prevInfo.search || ''), 'pop', 'back');
+          this.handleNavigate(
+            prevInfo.pathname + (prevInfo.search || ''),
+            'pop',
+            'back'
+          );
         }
       } else {
         this.handleNavigate(defaultHref as string, 'pop', 'back');
@@ -290,8 +333,14 @@ class IonRouterInner extends React.PureComponent<IonRouteProps, IonRouteState> {
       const newRouteInfo = { ...routeInfo };
       newRouteInfo.pathname = originalHref;
       newRouteInfo.routeOptions = originalRouteOptions;
-      this.incomingRouteParams = { ...newRouteInfo, routeAction: 'pop', routeDirection: 'back' };
-      this.props.history.push(newRouteInfo.pathname + (newRouteInfo.search || ''));
+      this.incomingRouteParams = {
+        ...newRouteInfo,
+        routeAction: 'pop',
+        routeDirection: 'back',
+      };
+      this.props.history.push(
+        newRouteInfo.pathname + (newRouteInfo.search || '')
+      );
     }
   }
 
@@ -304,7 +353,9 @@ class IonRouterInner extends React.PureComponent<IonRouteProps, IonRouteState> {
     }
   }
 
-  render() {
+  override render() {
+    // LEARN: NavManager is the @ionic/react context entry point that doesn't change
+    // LEARN: It looks like stackManager just exposes getStackManager() return value
     return (
       <RouteManagerContext.Provider value={this.routeMangerContextState}>
         <NavManager
