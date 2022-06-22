@@ -1,73 +1,83 @@
-# ionic-react-router
+# @anatine/ionic-react-router
 
-Rebuilding router for react-router v6
+## Description
 
-## Connection with core elements
+An effort to get React Router v6 working with the [Ionic Framework](https://ionicframework.com/docs/react/navigation)
 
-### The ionic wrapper
+### Background
+
+The goal of this project is to utilize the most of the React-Router v6 patterns with as minimal abstraction as possible.
+
+`<IonRouterOutlet>` is part of the base `@ionic/react` package creating tight coupling. Internally it wraps all the routes in a component called `<StackManager>`.
+
+In this lib, `<StackManager>` provides the same functionality and is passed to the `<IonRouteOutlet>` elements via `<IonNavigationContext>` and within the `<StackManager>` is an _outlet_ from `react-router-dom`
+
+### STATUS
+
+This is not production ready yet.
+
+It might be that the current `@ionic/react-router` only renders one outlet at a time where at this is following React Router v6 patterns where a nested outlet will render as well as the parent outlet.
+
+---
+
+## Installation
+
+```shell
+npm install @anatine/ionic-react-router
+```
+
+## Usage
 
 ```tsx
-<IonRouterOutletInner
-  setRef={(val: HTMLIonRouterOutletElement) => (this.ionRouterOutlet = val)} {...props} >
-  {children}
-</IonRouterOutletInner>
-```
+import {
+  IonPage,
+} from '@ionic/react';
 
-### Which is a proxy
+/* Core CSS required for Ionic components to work properly */
+import '@ionic/react/css/core.css';
 
-```tsx
-import { defineCustomElement as defineIonRouterOutlet } from '@ionic/core/components/ion-router-outlet.js';
-import { /*@__PURE__*/ createReactComponent } from './react-component-lib';
+/* Basic CSS for apps built with Ionic */
+import '@ionic/react/css/normalize.css';
+import '@ionic/react/css/structure.css';
+import '@ionic/react/css/typography.css';
 
-export const IonRouterOutletInner = /*@__PURE__*/ createReactComponent<
-  JSX.IonRouterOutlet & {
-    setRef?: (val: HTMLIonRouterOutletElement) => void;
-    forwardedRef?: React.ForwardedRef<HTMLIonRouterOutletElement>;
-  },
-  HTMLIonRouterOutletElement
->('ion-router-outlet', undefined, undefined, defineIonRouterOutlet);
-```
+// Routing libs
+import { IonNavigationContext } from '@anatine/ionic-react-router';
+import {
+  DataBrowserRouter,
+  Navigate,
+  Route,
+  useLocation,
+} from 'react-router-dom';
 
-### RouteInfo is used everywhere
+setupIonicReact({
+  mode: 'ios', // or 'md' or undefined
+});
 
-```typescript
-export interface RouteInfo<TOptions = any> {
-  id: string;
-  lastPathname?: string;
-  prevRouteLastPathname?: string;
-  routeAction?: RouteAction;
-  routeDirection?: RouterDirection;
-  routeAnimation?: AnimationBuilder;
-  routeOptions?: TOptions;
-  params?: { [key: string]: string | string[] };
-  pushedByRoute?: string;
-  pathname: string;
-  search: string;
-  tab?: string;
+export function App() {
+
+  return(
+    <DataBrowserRouter
+      fallbackElement={
+        <div>
+          <h1>MISSING</h1>
+        </div>
+      }
+    >
+      <Route
+        element={
+          <IonNavigationContext>
+            <IonRouterOutlet />
+          </IonNavigationContext>
+        }
+      >
+        <Route path="/*" element={<IonPage><h1>Main Page with Navigation</h1></IonPage>} />
+        <Route path="/profile/*" element={<IonPage><h1>Profile</h1></IonPage>} />
+        <Route path="/profile/details" element={<IonPage><h1>Profile Details</h1></IonPage>} />
+      </Route>
+    </DataBrowserRouter>
+  )
+
 }
-```
 
-### NavManger is necessary
-
-```typescript
-interface NavManagerProps {
-  routeInfo: RouteInfo;
-  onNativeBack: () => void;
-  onNavigateBack: (route?: string | RouteInfo, animationBuilder?: AnimationBuilder) => void;
-  onNavigate: (
-    path: string,
-    action: RouteAction,
-    direction?: RouterDirection,
-    animationBuilder?: AnimationBuilder,
-    options?: any,
-    tab?: string
-  ) => void;
-  onSetCurrentTab: (tab: string, routeInfo: RouteInfo) => void;
-  onChangeTab: (tab: string, path: string, routeOptions?: any) => void;
-  onResetTab: (tab: string, path: string, routeOptions?: any) => void;
-  ionRedirect: any;
-  ionRoute: any;
-  stackManager: any;
-  locationHistory: LocationHistory;
-}
 ```

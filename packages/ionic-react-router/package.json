@@ -20,6 +20,7 @@
     "url": "https://github.com/anatine/ionic-modules.git"
   },
   "peerDependencies": {
+    "@ionic/react": ">=6.1.10",
     "react": ">=16.8.6",
     "react-dom": ">=16.8.6",
     "react-router": "^6.3.0",
